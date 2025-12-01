@@ -81,3 +81,49 @@ class CustomPasswordResetView(PasswordResetView):
             'Password reset email has been sent if the email exists in our system.'
         )
         return super().form_valid(form)
+
+class BookmarkListView(LoginRequiredMixin, ListView):
+    """
+    View to display user's bookmarked reefs.
+    """
+    model = ReefBookmark
+    template_name = 'core/bookmarks.html'
+    context_object_name = 'bookmarks'
+    paginate_by = 12
+ 
+    def get_queryset(self):
+        """Get bookmarks for current user."""
+        return ReefBookmark.objects.filter(
+            user=self.request.user
+        ).select_related('reef')
+ 
+ 
+def bookmark_toggle(request, reef_id):
+    """
+    Toggle bookmark status for a reef (AJAX endpoint).
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Authentication required'}, status=401)
+ 
+    reef = get_object_or_404(Reef, pk=reef_id)
+ 
+    bookmark, created = ReefBookmark.objects.get_or_create(
+        user=request.user,
+        reef=reef
+    )
+ 
+    if not created:
+        # Bookmark exists, so remove it
+        bookmark.delete()
+        bookmarked = False
+        message = f'Removed {reef.name} from bookmarks'
+    else:
+        bookmarked = True
+        message = f'Added {reef.name} to bookmarks'
+ 
+    messages.success(request, message)
+ 
+    return JsonResponse({
+        'bookmarked': bookmarked,
+        'message': message
+    })
