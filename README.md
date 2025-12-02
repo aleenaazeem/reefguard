@@ -12,18 +12,18 @@ ReefGuard is a Django-based web application for monitoring and protecting coral 
 ## 🌏 Problem & Motivation
 
 Coral reefs are vital to our planet's health, yet they are under severe threat.
-* [cite_start]**Biodiversity:** While covering less than 1% of the ocean floor, reefs support approximately 25% of all marine life[cite: 10].
-* [cite_start]**Climate Balance:** They help balance Earth’s climate by producing oxygen and absorbing CO₂[cite: 11].
-* [cite_start]**Economic & Coastal Value:** Reefs generate billions in fisheries and tourism and protect coastlines from storms[cite: 12].
-* [cite_start]**The Crisis:** Over 50% of shallow corals have been lost in the past 30 years due to warming seas, pollution, overfishing, and cyclones[cite: 14, 15].
+**Biodiversity:** While covering less than 1% of the ocean floor, reefs support approximately 25% of all marine life.
+**Climate Balance:** They help balance Earth’s climate by producing oxygen and absorbing CO₂.
+**Economic & Coastal Value:** Reefs generate billions in fisheries and tourism and protect coastlines from storms.
+**The Crisis:** Over 50% of shallow corals have been lost in the past 30 years due to warming seas, pollution, overfishing, and cyclones.
 
 ## 🚀 Key Features
 
 * **Reef Health Tracking:** Monitor vital statistics of reef ecosystems.
 * **Pollution Reporting:** A system for users to report and geolocate pollution incidents.
 * **Community Sightings:** Share and view coral sightings from divers and researchers.
-* [cite_start]**User Accounts:** Secure authentication for researchers and general users[cite: 18].
-* [cite_start]**Interactive Dashboard:** Data visualization for reef metrics[cite: 17].
+* **User Accounts:** Secure authentication for researchers and general users.
+* **Interactive Dashboard:** Data visualization for reef metrics.
 
 ## 🛠️ Tech Stack
 
@@ -35,11 +35,11 @@ Coral reefs are vital to our planet's health, yet they are under severe threat.
 
 [cite_start]This project was developed by **Group 17**[cite: 2]:
 
-* [cite_start]**Aleena Ali Azeem** [cite: 3]
-* [cite_start]**Arya Gupta** [cite: 4]
-* [cite_start]**Gurleen Kaur** [cite: 5]
-* [cite_start]**Mehakpreet Kaur** [cite: 6]
-* [cite_start]**Simranpreet Kaur** [cite: 7]
+* **Aleena Ali Azeem**
+* **Arya Gupta**
+* **Gurleen Kaur**
+* **Mehakpreet Kaur**
+* **Simranpreet Kaur**
   
 ## Features
 
