@@ -1,5 +1,40 @@
-from django.views.generic import TemplateView
-from .models import Reef, Event, Article
+"""
+Views for ReefGuard application.
+
+Implements class-based views for:
+- Home page
+- Reef list and detail
+- Event list and detail
+- Article list and detail
+- Forms (pollution report, coral sighting, contact)
+- User authentication
+- Image gallery
+- User profile and dashboard
+- Data export
+"""
+from django.shortcuts import render, redirect, get_object_or_404
+from django.views.generic import (
+    ListView, DetailView, CreateView, FormView, TemplateView, UpdateView
+)
+from django.contrib.auth.views import (
+    LoginView, LogoutView, PasswordResetView, PasswordResetConfirmView
+)
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib import messages
+from django.urls import reverse_lazy
+from django.db.models import Q, Count
+from django.http import HttpResponse, JsonResponse
+from django.utils import timezone
+import csv
+from datetime import datetime
+from .models import Reef, Event, Article, ImageGallery, CustomUser, ReefBookmark
+from .forms import (
+    UserRegistrationForm, PollutionReportForm, CoralSightingForm,
+    ContactForm, ImageUploadForm
+)
+from .decorators import (
+    RoleRequiredMixin, AdminRequiredMixin, ResearcherOrAdminMixin
+)
 
 class HomeView(TemplateView):
     """Home page view with featured content and recent activity."""
@@ -14,6 +49,154 @@ class HomeView(TemplateView):
         context['reef_count'] = Reef.objects.count()
         context['event_count'] = Event.objects.count()
         return context
+
+class ReefListView(ListView):
+    """
+    List view for all reefs with search, filtering, and sorting.
+    Supports filtering by region and health status.s
+    """
+    model = Reef
+    template_name = 'core/reef_list.html'
+    context_object_name = 'reefs'
+    paginate_by = 12
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        # Search functionality
+        search_query = self.request.GET.get('search', '')
+        if search_query:
+            queryset = queryset.filter(
+                Q(name__icontains=search_query) |
+                Q(country__icontains=search_query) |
+                Q(description__icontains=search_query)
+            )
+
+        # Filter by region
+        region = self.request.GET.get('region', '')
+        if region:
+            queryset = queryset.filter(region=region)
+
+        # Filter by health status
+        health = self.request.GET.get('health', '')
+        if health:
+            queryset = queryset.filter(health_status=health)
+
+        # Sorting
+        sort = self.request.GET.get('sort', '-created_at')
+        if sort in ['name', '-name', 'area_km2', '-area_km2', 'health_status', '-health_status', 'created_at', '-created_at']:
+            queryset = queryset.order_by(sort)
+
+        # Store filters in session
+        self.request.session['last_reef_filters'] = {
+            'search': search_query,
+            'region': region,
+            'health': health,
+        }
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['regions'] = Reef.REGION_CHOICES
+        context['health_statuses'] = [
+            ('excellent', 'Excellent'),
+            ('good', 'Good'),
+            ('fair', 'Fair'),
+            ('poor', 'Poor'),
+            ('critical', 'Critical'),
+        ]
+        context['current_filters'] = self.request.GET
+        context['current_sort'] = self.request.GET.get('sort', '-created_at')
+
+        # Recently viewed reefs
+        viewed_reef_ids = self.request.session.get('viewed_reefs', [])
+        if viewed_reef_ids:
+            context['recently_viewed'] = Reef.objects.filter(id__in=viewed_reef_ids)[:5]
+
+        return context
+
+class ReefDetailView(DetailView):
+    """
+    Detail view for individual reef.
+    Shows reef info, related events, and gallery.
+    """
+    model = Reef
+    template_name = 'core/reef_detail.html'
+    context_object_name = 'reef'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        reef = self.get_object()
+        context['events'] = reef.events.all()[:10]
+        context['gallery_items'] = reef.gallery_items.all()[:8]
+
+        # Track last viewed reef in session
+        if 'viewed_reefs' not in self.request.session:
+            self.request.session['viewed_reefs'] = []
+
+        viewed_reefs = self.request.session['viewed_reefs']
+        reef_id = reef.id
+        if reef_id in viewed_reefs:
+            viewed_reefs.remove(reef_id)
+        viewed_reefs.insert(0, reef_id)
+        self.request.session['viewed_reefs'] = viewed_reefs[:10]  # Keep last 10
+        self.request.session.modified = True
+
+        return context
+
+class ArticleListView(ListView):
+    """
+    List view for published articles with search and filtering.
+    """
+    model = Article
+    template_name = 'core/article_list.html'
+    context_object_name = 'articles'
+    paginate_by = 10
+
+    def get_queryset(self):
+        queryset = Article.objects.filter(published=True)
+
+        # Search functionality
+        search_query = self.request.GET.get('search', '')
+        if search_query:
+            queryset = queryset.filter(
+                Q(title__icontains=search_query) |
+                Q(content__icontains=search_query) |
+                Q(excerpt__icontains=search_query)
+            )
+
+        # Filter by category
+        category = self.request.GET.get('category', '')
+        if category:
+            queryset = queryset.filter(category=category)
+
+        # Sorting
+        sort = self.request.GET.get('sort', '-created_at')
+        if sort in ['title', '-title', 'created_at', '-created_at']:
+            queryset = queryset.order_by(sort)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['categories'] = Article.CATEGORY_CHOICES
+        context['current_category'] = self.request.GET.get('category', '')
+        context['search_query'] = self.request.GET.get('search', '')
+        context['current_sort'] = self.request.GET.get('sort', '-created_at')
+        return context
+
+
+class ArticleDetailView(DetailView):
+    """
+    Detail view for individual article.
+    """
+    model = Article
+    template_name = 'core/article_detail.html'
+    context_object_name = 'article'
+
+    def get_queryset(self):
+        return Article.objects.filter(published=True)
 
 class EventListView(ListView):
     """
