@@ -1,4 +1,6 @@
 # ReefGuard - Coral Reef Monitoring & Restoration Platform
+<img width="1000" height="400" alt="Gemini_Generated_Image_sxw3vesxw3vesxw3" src="https://github.com/user-attachments/assets/8451b044-6c2f-4d0d-8e97-9cf330e2270c" />
+
 
 ReefGuard is a Django-based web application for monitoring and protecting coral reefs worldwide. The platform enables researchers, students, and conservationists to track reef health, report pollution incidents, share coral sightings, and contribute to global reef conservation efforts.
 
